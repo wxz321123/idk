@@ -231,6 +231,11 @@ inputFiles.forEach(files => {
     console.log("Istanze da gestire: " + istanze_rimaste + " istanze");
     // vector_free_cpu_average(single_server_status_sum_up, 1); const v_pendence_cpu
     // = vector_pendence_cpu(single_server_status_sum_up, 1);
+    let precisione = {
+        precisione_shuffle: 10,
+        precisione_rovesciamento: 10,
+        precisione_iniettamento: 10
+    }
     do
     {
         changed = 0;
@@ -243,13 +248,12 @@ inputFiles.forEach(files => {
         if (type_cicle_to_do == 0) {
             type_cicle_to_do++;
             for (let i = 0; i < single_server_status_sum_up.length; i++) {
-                console.log("Ciclo " + i + "-esimo");
                 let app_aggiunte;
                 do
                 {
                     app_aggiunte = 0;
                     //ripeto fino a quando aggiungo qualcosa sul server e cosi fino alla fine
-                    const match = the_best_solution_without_count_condition(single_server_status_sum_up[i], application_sum_up, 50);
+                    const match = the_best_solution_without_count_condition(single_server_status_sum_up[i], application_sum_up, precisione.precisione_rovesciamento);
                     if (match.id_app != -1) {
                         //quindi id app valido
                         for (let j = 0; j < application_sum_up[match.id_app].on_server_istance.length; j++) {
@@ -282,8 +286,8 @@ inputFiles.forEach(files => {
                                 j = application_sum_up[match.id_app].on_server_istance;
                             }
                         }
+                        console.log("Ciclo " + i + "-esimo app spostate " + app_aggiunte);
                     }
-                    console.log("App spostate " + app_aggiunte);
                 }
                 while (app_aggiunte > 0) ;
                 }
@@ -295,7 +299,7 @@ inputFiles.forEach(files => {
                 {
                     app_aggiunte = 0;
                     //ripeto fino a quando aggiungo qualcosa sul server e cosi fino alla fine
-                    const match = the_best_solution_without_count_condition(single_server_status_sum_up[i], application_sum_up, 50);
+                    const match = the_best_solution_without_count_condition(single_server_status_sum_up[i], application_sum_up, precisione.precisione_rovesciamento);
                     if (match.id_app != -1) {
                         //quindi id app valido
                         for (let j = 0; j < application_sum_up[match.id_app].on_server_istance.length; j++) {
@@ -333,16 +337,23 @@ inputFiles.forEach(files => {
                 while (app_aggiunte > 0) ;
                 }
             }
+        if (spazio_creato > 0) {
+            precisione.precisione_rovesciamento = precisione.precisione_rovesciamento * 0.5;
+        } else {
+            precisione.precisione_rovesciamento = precisione.precisione_rovesciamento * 3;
+        }
         console.log(`App spostate per creare spazio: ${spazio_creato}`);
         console.log("Riempimento server..");
+        let total_add = 0;
         do
         {
             added = 0;
             const v_pendence_cpu = vector_pendence_cpu(single_server_status_sum_up, 1);
             v_pendence_cpu.forEach(server_el => {
-                const best_match = the_best_solution(single_server_status_sum_up[server_el], application_sum_up, 30);
+                const best_match = the_best_solution(single_server_status_sum_up[server_el], application_sum_up, precisione.precisione_iniettamento);
                 if (best_match.id_app != -1) {
                     added++;
+                    total_add++;
                     changed++;
                     //devo togliere da app count
                     logger.write(`inst_${application_sum_up[best_match.id_app].free_istance[0] + 1},machine_${server_el + 1}\n`);
@@ -372,6 +383,11 @@ inputFiles.forEach(files => {
         }
         while (added > 0) 
         ;
+        if (total_add == 0) {
+            precisione.precisione_iniettamento = precisione.precisione_iniettamento * 3;
+        } else {
+            precisione.precisione_iniettamento = precisione.precisione_iniettamento * 0.5;
+        }
         istanze_rimaste = 0;
         application_sum_up.forEach(el => {
             istanze_rimaste += el.count;
@@ -386,7 +402,7 @@ inputFiles.forEach(files => {
             for (let i = 0; i < application_sum_up.length; app_whish.push({id_server_in: [], id_server_out: []}), i++) 
             ;
             v_pendence_cpu.forEach(server_id => {
-                const solution_in = the_best_solution_without_count_condition(single_server_status_sum_up[server_id], application_sum_up, 10);
+                const solution_in = the_best_solution_without_count_condition(single_server_status_sum_up[server_id], application_sum_up, precisione_shuffle);
                 const solution_out = the_best_solution_inverse(single_server_status_sum_up[server_id], application_sum_up);
                 if (solution_in.id_app != -1) {
                     app_whish[solution_in.id_app]
@@ -401,6 +417,7 @@ inputFiles.forEach(files => {
 
             });
             //guardo se si riescono a fare matching
+            let total_swiched = 0;
             console.log("Inizio fase scambio per ottimizzazione spazio");
             for (let i = 0; i < app_whish.length; i++) {
                 if (app_whish[i].id_server_out.length > 0 && app_whish[i].id_server_in.length > 0) {
@@ -410,6 +427,7 @@ inputFiles.forEach(files => {
                         for (let j = 0; app_whish[i].id_server_in.length > 0 && app_whish[i].id_server_out.length > 0 && j < single_server_status_sum_up[app_whish[i].id_server_out[0]].list_id_app.length; j++) {
                             if (single_server_status_sum_up[app_whish[i].id_server_out[0]].list_id_app[j] == i) {
                                 changed++;
+                                total_swiched++;
                                 for (let k = 0; k < application_sum_up[i].on_server_istance.length; k++) {
                                     if (application_sum_up[i].on_server_istance[k].id_server == app_whish[i].id_server_out[0]) {
                                         //trovato va cambiato id_server
@@ -447,6 +465,11 @@ inputFiles.forEach(files => {
                     }
                 }
             console.log("App scambiate: " + swiched);
+            if (total_swiched == 0) {
+                precisione.precisione_shuffle = precisione.precisione_shuffle * 3;
+            } else {
+                precisione.precisione_shuffle = precisione.precisione_shuffle * 0.5;
+            }
         }
         while (times < 20 && swiched > 0) 
         ;
