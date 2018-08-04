@@ -254,12 +254,12 @@ inputFiles.forEach(files => {
             {
                 app_aggiunte = 0;
                 precisione_dinamico = precisione_dinamico * 0.5;
-                const match = the_best_solution_without_count_condition(single_server_status_sum_up[i], application_sum_up, precisione_dinamico);
+                const match = the_best_solution_without_count_condition(single_server_status_sum_up[free_cpu_server[i]], application_sum_up, precisione_dinamico);
                 if (match.id_app != -1) {
                     for (let j = 0; j < application_sum_up[match.id_app].on_server_istance.length; j++) {
                         const rest_list = free_cpu_server.slice(i + 1, free_cpu_server.length);
                         //trovo il server scorrendo la lista della applicazione
-                        if (rest_list.includes(application_sum_up[match.id_app].on_server_istance[j].id_server) && application_sum_up[match.id_app].on_server_istance[j].id_server != free_cpu_server[i]) { //anche altre condizioni
+                        if (rest_list.includes(application_sum_up[match.id_app].on_server_istance[j].id_server)) { //anche altre condizioni
                             changed++;
                             spazio_creato++;
                             added_per_cicle++;
@@ -277,6 +277,7 @@ inputFiles.forEach(files => {
                                 }
                             }
                             logger.write(`inst_${application_sum_up[match.id_app].on_server_istance[j].id_istance + 1},machine_${free_cpu_server[i] + 1}\n`);
+                            update_server(single_server_status_sum_up[application_sum_up[match.id_app].on_server_istance[j].id_server], application_sum_up[match.id_app], -1);
                             application_sum_up[match.id_app].on_server_istance[j].id_server = free_cpu_server[i];
                             application_sum_up[match.id_app].on_server_istance[j].index_server_type = single_server_status_sum_up[free_cpu_server[i]].type_index;
                             single_server_status_sum_up[free_cpu_server[i]]
@@ -287,7 +288,6 @@ inputFiles.forEach(files => {
                                 .push(application_sum_up[match.id_app].on_server_istance[j].id_istance);
                             //il server deve cercare l'istanza e toglierlo
                             update_server(single_server_status_sum_up[free_cpu_server[i]], application_sum_up[match.id_app], 1);
-                            update_server(single_server_status_sum_up[j], application_sum_up[match.id_app], -1);
                             app_aggiunte++;
                             j = application_sum_up[match.id_app].on_server_istance;
                         }
@@ -368,7 +368,7 @@ inputFiles.forEach(files => {
             for (let i = 0; i < application_sum_up.length; app_whish.push({id_server_in: [], id_server_out: []}), i++) 
             ;
             v_pendence_cpu.forEach(server_id => {
-                const solution_in = the_best_solution_without_count_condition(single_server_status_sum_up[server_id], application_sum_up, precisione_shuffle);
+                const solution_in = the_best_solution_without_count_condition(single_server_status_sum_up[server_id], application_sum_up,precisione.precisione_shuffle);
                 const solution_out = the_best_solution_inverse(single_server_status_sum_up[server_id], application_sum_up);
                 if (solution_in.id_app != -1) {
                     app_whish[solution_in.id_app]
