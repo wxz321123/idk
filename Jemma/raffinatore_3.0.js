@@ -239,7 +239,6 @@ inputFiles.forEach(files => {
         let times = 0;
         let added;
         let spazio_creato = 0;
-        /*
         console.log("Creazione spazio..");
         if (type_cicle_to_do == 0) {
             type_cicle_to_do++;
@@ -250,7 +249,7 @@ inputFiles.forEach(files => {
                 {
                     app_aggiunte = 0;
                     //ripeto fino a quando aggiungo qualcosa sul server e cosi fino alla fine
-                    const match = the_best_solution_without_count_condition(single_server_status_sum_up[i], application_sum_up);
+                    const match = the_best_solution_without_count_condition(single_server_status_sum_up[i], application_sum_up, 50);
                     if (match.id_app != -1) {
                         //quindi id app valido
                         for (let j = single_server_status_sum_up.length - 1; j > i; j--) {
@@ -308,7 +307,7 @@ inputFiles.forEach(files => {
                 {
                     app_aggiunte = 0;
                     //ripeto fino a quando aggiungo qualcosa sul server e cosi fino alla fine
-                    const match = the_best_solution_without_count_condition(single_server_status_sum_up[i], application_sum_up);
+                    const match = the_best_solution_without_count_condition(single_server_status_sum_up[i], application_sum_up, 50);
                     if (match.id_app != -1) {
                         //quindi id app valido
                         for (let j = 0; j < i; j++) {
@@ -359,14 +358,13 @@ inputFiles.forEach(files => {
                 }
             }
         console.log(`App spostate per creare spazio: ${spazio_creato}`);
-        */
         console.log("Riempimento server..");
         do
         {
             added = 0;
             const v_pendence_cpu = vector_pendence_cpu(single_server_status_sum_up, 1);
             v_pendence_cpu.forEach(server_el => {
-                const best_match = the_best_solution(single_server_status_sum_up[server_el], application_sum_up);
+                const best_match = the_best_solution(single_server_status_sum_up[server_el], application_sum_up, 30);
                 if (best_match.id_app != -1) {
                     added++;
                     changed++;
@@ -412,7 +410,7 @@ inputFiles.forEach(files => {
             for (let i = 0; i < application_sum_up.length; app_whish.push({id_server_in: [], id_server_out: []}), i++) 
             ;
             v_pendence_cpu.forEach(server_id => {
-                const solution_in = the_best_solution_without_count_condition(single_server_status_sum_up[server_id], application_sum_up);
+                const solution_in = the_best_solution_without_count_condition(single_server_status_sum_up[server_id], application_sum_up, 10);
                 const solution_out = the_best_solution_inverse(single_server_status_sum_up[server_id], application_sum_up);
                 if (solution_in.id_app != -1) {
                     app_whish[solution_in.id_app]
@@ -643,7 +641,7 @@ function compatible_resource_server(server_resource_in, id_to_add, app_status) {
         return {is_possible: 1};
     }
 }
-function the_best_solution(server_resource, app_status_all) {
+function the_best_solution(server_resource, app_status_all, precision) {
     //quello che meglio aprossima
     let status_convergenza = {
         id_app: -1,
@@ -678,7 +676,7 @@ function the_best_solution(server_resource, app_status_all) {
                     status_convergenza.convergenza_ram = current_convergenza.convergenza_ram;
                     status_convergenza.cpu = res.new_server_resource.cpu_status;
                     status_convergenza.cpu = res.new_server_resource.ram_status;
-                    if (status_convergenza.convergenza_cpu < 10) {
+                    if (status_convergenza.convergenza_cpu < precision) {
                         j = app_status_all.length;
                     }
                 }
@@ -772,7 +770,7 @@ function update_server(server, application, add_or_delete) {
     for (let i = 0; i < server.ram_status.length; server.cpu_status[i] += (add_or_delete) * application.resource_needed.cpu[i], server.ram_status[i] += (add_or_delete) * application.resource_needed.ram[i], i++) ;
     }
 
-function the_best_solution_without_count_condition(server_resource, app_status_all) {
+function the_best_solution_without_count_condition(server_resource, app_status_all, precisone) {
     //quello che meglio aprossima
     let status_convergenza = {
         id_app: -1,
@@ -807,7 +805,7 @@ function the_best_solution_without_count_condition(server_resource, app_status_a
                     status_convergenza.convergenza_ram = current_convergenza.convergenza_ram;
                     status_convergenza.cpu = res.new_server_resource.cpu_status;
                     status_convergenza.cpu = res.new_server_resource.ram_status;
-                    if (status_convergenza.convergenza_cpu < 10) {
+                    if (status_convergenza.convergenza_cpu < precisone) {
                         j = app_status_all.length;
                     }
                 }
