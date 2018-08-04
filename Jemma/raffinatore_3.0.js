@@ -252,46 +252,34 @@ inputFiles.forEach(files => {
                     const match = the_best_solution_without_count_condition(single_server_status_sum_up[i], application_sum_up, 50);
                     if (match.id_app != -1) {
                         //quindi id app valido
-                        for (let j = single_server_status_sum_up.length - 1; j > i; j--) {
-                            let k;
-                            for (k = 0; k < single_server_status_sum_up[j].list_id_app.length; k++) {
-                                //per ogni id app sul server
-                                if (single_server_status_sum_up[j].list_id_app[k] == match.id_app) {
-                                    //va fatto lo scambio tra i due server registro attività
-                                    changed++;
-                                    spazio_creato++;
-                                    logger.write(`inst_${single_server_status_sum_up[j].list_id_istance[k] + 1},machine_${single_server_status_sum_up[i].id_server + 1}\n`);
-                                    // vanno aggiornati i dati della app vanno aggiornati i dati e vanno tolti e
-                                    // aggiunti a livello server
-                                    for (let z = 0; z < application_sum_up[match.id_app].on_server_istance.length; z++) {
-                                        // aggiornamento a livello applicazione switch id server della istanza in
-                                        // questione
-                                        if (application_sum_up[match.id_app].on_server_istance[z].id_server == single_server_status_sum_up[j].id_server && application_sum_up[match.id_app].on_server_istance[z].id_istance == single_server_status_sum_up[j].list_id_istance[k]) {
-                                            application_sum_up[match.id_app].on_server_istance[z].id_server = single_server_status_sum_up[i].id_server;
-                                            application_sum_up[match.id_app].on_server_istance[z].index_server_type = single_server_status_sum_up[i].type_index;
-                                            z = application_sum_up[match.id_app].on_server_istance.length;
-                                        }
+                        for (let j = 0; j < application_sum_up[match.id_app].on_server_istance.length; j++) {
+                            if (application_sum_up[match.id_app].on_server_istance[j].id_server > i) { //anche altre condizioni
+                                changed++;
+                                spazio_creato++;
+                                for (let k = 0; k < single_server_status_sum_up[application_sum_up[match.id_app].on_server_istance[j].id_server].list_id_istance.length; k++) {
+                                    if (single_server_status_sum_up[application_sum_up[match.id_app].on_server_istance[j].id_server].list_id_istance[k] == application_sum_up[match.id_app].on_server_istance[j].id_istance) {
+                                        single_server_status_sum_up[application_sum_up[match.id_app].on_server_istance[j].id_server]
+                                            .list_id_app
+                                            .splice(k, 1);
+                                        single_server_status_sum_up[application_sum_up[match.id_app].on_server_istance[j].id_server]
+                                            .list_id_istance
+                                            .splice(k, 1);
                                     }
-                                    single_server_status_sum_up[i]
-                                        .list_id_app
-                                        .push(single_server_status_sum_up[j].list_id_app[k]);
-                                    single_server_status_sum_up[i]
-                                        .list_id_istance
-                                        .push(single_server_status_sum_up[j].list_id_istance[k]);
-                                    single_server_status_sum_up[j]
-                                        .list_id_app
-                                        .splice(k, 1);
-                                    single_server_status_sum_up[j]
-                                        .list_id_istance
-                                        .splice(k, 1);
-                                    update_server(single_server_status_sum_up[i], application_sum_up[match.id_app], 1);
-                                    update_server(single_server_status_sum_up[j], application_sum_up[match.id_app], -1);
-                                    k = single_server_status_sum_up[j].list_id_app.length;
-                                    app_aggiunte++;
                                 }
-                            }
-                            if (k == single_server_status_sum_up[j].list_id_app.length + 1) {
-                                j = i;
+                                logger.write(`inst_${application_sum_up[match.id_app].on_server_istance[j].id_istance + 1},machine_${single_server_status_sum_up[i].id_server + 1}\n`);
+                                application_sum_up[match.id_app].on_server_istance[j].id_server = single_server_status_sum_up[i].id_server;
+                                application_sum_up[match.id_app].on_server_istance[j].index_server_type = single_server_status_sum_up[i].type_index;
+                                single_server_status_sum_up[i]
+                                    .list_id_app
+                                    .push(match.id_app);
+                                single_server_status_sum_up[i]
+                                    .list_id_istance
+                                    .push(application_sum_up[match.id_app].on_server_istance[j].id_istance);
+                                //il server deve cercare l'istanza e toglierlo
+                                update_server(single_server_status_sum_up[i], application_sum_up[match.id_app], 1);
+                                update_server(single_server_status_sum_up[j], application_sum_up[match.id_app], -1);
+                                app_aggiunte++;
+                                j = application_sum_up[match.id_app].on_server_istance;
                             }
                         }
                     }
@@ -310,46 +298,34 @@ inputFiles.forEach(files => {
                     const match = the_best_solution_without_count_condition(single_server_status_sum_up[i], application_sum_up, 50);
                     if (match.id_app != -1) {
                         //quindi id app valido
-                        for (let j = 0; j < i; j++) {
-                            let k;
-                            for (k = 0; k < single_server_status_sum_up[j].list_id_app.length; k++) {
-                                //per ogni id app sul server
-                                if (single_server_status_sum_up[j].list_id_app[k] == match.id_app) {
-                                    //va fatto lo scambio tra i due server registro attività
-                                    changed++;
-                                    spazio_creato++;
-                                    logger.write(`inst_${single_server_status_sum_up[j].list_id_istance[k] + 1},machine_${single_server_status_sum_up[i].id_server + 1}\n`);
-                                    // vanno aggiornati i dati della app vanno aggiornati i dati e vanno tolti e
-                                    // aggiunti a livello server
-                                    for (let z = 0; z < application_sum_up[match.id_app].on_server_istance.length; z++) {
-                                        // aggiornamento a livello applicazione switch id server della istanza in
-                                        // questione
-                                        if (application_sum_up[match.id_app].on_server_istance[z].id_server == single_server_status_sum_up[j].id_server && application_sum_up[match.id_app].on_server_istance[z].id_istance == single_server_status_sum_up[j].list_id_istance[k]) {
-                                            application_sum_up[match.id_app].on_server_istance[z].id_server = single_server_status_sum_up[i].id_server;
-                                            application_sum_up[match.id_app].on_server_istance[z].index_server_type = single_server_status_sum_up[i].type_index;
-                                            z = application_sum_up[match.id_app].on_server_istance.length;
-                                        }
+                        for (let j = 0; j < application_sum_up[match.id_app].on_server_istance.length; j++) {
+                            if (application_sum_up[match.id_app].on_server_istance[j].id_server < i) { //anche altre condizioni
+                                changed++;
+                                spazio_creato++;
+                                for (let k = 0; k < single_server_status_sum_up[application_sum_up[match.id_app].on_server_istance[j].id_server].list_id_istance.length; k++) {
+                                    if (single_server_status_sum_up[application_sum_up[match.id_app].on_server_istance[j].id_server].list_id_istance[k] == application_sum_up[match.id_app].on_server_istance[j].id_istance) {
+                                        single_server_status_sum_up[application_sum_up[match.id_app].on_server_istance[j].id_server]
+                                            .list_id_app
+                                            .splice(k, 1);
+                                        single_server_status_sum_up[application_sum_up[match.id_app].on_server_istance[j].id_server]
+                                            .list_id_istance
+                                            .splice(k, 1);
                                     }
-                                    single_server_status_sum_up[i]
-                                        .list_id_app
-                                        .push(single_server_status_sum_up[j].list_id_app[k]);
-                                    single_server_status_sum_up[i]
-                                        .list_id_istance
-                                        .push(single_server_status_sum_up[j].list_id_istance[k]);
-                                    single_server_status_sum_up[j]
-                                        .list_id_app
-                                        .splice(k, 1);
-                                    single_server_status_sum_up[j]
-                                        .list_id_istance
-                                        .splice(k, 1);
-                                    update_server(single_server_status_sum_up[i], application_sum_up[match.id_app], 1);
-                                    update_server(single_server_status_sum_up[j], application_sum_up[match.id_app], -1);
-                                    k = single_server_status_sum_up[j].list_id_app.length;
-                                    app_aggiunte++;
                                 }
-                            }
-                            if (k == single_server_status_sum_up[j].list_id_app.length + 1) {
-                                j = i;
+                                logger.write(`inst_${application_sum_up[match.id_app].on_server_istance[j].id_istance + 1},machine_${single_server_status_sum_up[i].id_server + 1}\n`);
+                                application_sum_up[match.id_app].on_server_istance[j].id_server = single_server_status_sum_up[i].id_server;
+                                application_sum_up[match.id_app].on_server_istance[j].index_server_type = single_server_status_sum_up[i].type_index;
+                                single_server_status_sum_up[i]
+                                    .list_id_app
+                                    .push(match.id_app);
+                                single_server_status_sum_up[i]
+                                    .list_id_istance
+                                    .push(application_sum_up[match.id_app].on_server_istance[j].id_istance);
+                                //il server deve cercare l'istanza e toglierlo
+                                update_server(single_server_status_sum_up[i], application_sum_up[match.id_app], 1);
+                                update_server(single_server_status_sum_up[j], application_sum_up[match.id_app], -1);
+                                app_aggiunte++;
+                                j = application_sum_up[match.id_app].on_server_istance;
                             }
                         }
                     }
