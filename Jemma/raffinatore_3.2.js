@@ -12,7 +12,7 @@ const inputFiles = [
         tagDate: 'b'
     }
 ]
-const logger = fs.createWriteStream('submit_20180802-151103.csv', {
+const logger = fs.createWriteStream(`./submit_output/submit_${new Date().toLocaleString().replace(/-/g, '').replace(/ /g, '-').replace(/:/g, '')}.csv`, {
     flags: 'w' // 'a' means appending (old data will be preserved)
 });
 inputFiles.forEach(files => {
@@ -439,7 +439,7 @@ inputFiles.forEach(files => {
                 precisione.precisione_shuffle = precisione.precisione_shuffle * 0.5;
             }
         }
-        while (times < 20 && swiched > 0) 
+        while (times < 8 && swiched > 0) 
         ;
         console.log(new Date().toLocaleString().replace(/-/g, '/') + " --- Azioni compiute: " + changed);
     }
