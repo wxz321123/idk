@@ -1,4 +1,4 @@
 'use strict'
 //console.log(Math.floor(Math.random() * 10));
-let a = 3;
-let b = a;
+
+console.log(new Date().toLocaleString().replace(/-/g,'/')+" ciao");
