@@ -220,7 +220,6 @@ inputFiles.forEach(files => {
     for (let i = 0; i < application_sum_up.length; i++) {
         application_sum_up[i].count -= application_sum_up[i].on_server_istance.length;
     }
-    app_rompiscatole(application_sum_up);
     return;
     /* inizio codice ricerca */
     //ora vanno riempiti
@@ -233,9 +232,9 @@ inputFiles.forEach(files => {
     // vector_free_cpu_average(single_server_status_sum_up, 1); const v_pendence_cpu
     // = vector_pendence_cpu(single_server_status_sum_up, 1);
     let precisione = {
-        precisione_shuffle: 10,
-        precisione_rovesciamento: 10,
-        precisione_iniettamento: 10
+        precisione_shuffle: 20,
+        precisione_rovesciamento: 20,
+        precisione_iniettamento: 20
     }
     do
     {
@@ -315,41 +314,49 @@ inputFiles.forEach(files => {
         // sarebbe meglio per ogni app distribuire a ogni server...sarebbe un filo piu
         // veloce
         let total_add = 0;
+        let total_added_for_now;
         let precisione_dinamico_iniettamento = precisione.precisione_iniettamento;
         do
         {
             added = 0;
             const v_pendence_cpu = vector_pendence_cpu(single_server_status_sum_up, 1);
             v_pendence_cpu.forEach(server_el => {
-                const best_match = the_best_solution(single_server_status_sum_up[server_el], application_sum_up, precisione_dinamico_iniettamento);
-                if (best_match.id_app != -1) {
-                    added++;
-                    total_add++;
-                    changed++;
-                    //devo togliere da app count
-                    logger.write(`inst_${application_sum_up[best_match.id_app].free_istance[0] + 1},machine_${server_el + 1}\n`);
-                    application_sum_up[best_match.id_app]
-                        .on_server_istance
-                        .push({
-                            id_istance: application_sum_up[best_match.id_app].free_istance[0],
-                            id_server: server_el,
-                            index_server_type: single_server_status_sum_up[server_el].type_index
-                        })
-                    single_server_status_sum_up[server_el]
-                        .list_id_app
-                        .push(best_match.id_app);
-                    single_server_status_sum_up[server_el]
-                        .list_id_istance
-                        .push(application_sum_up[best_match.id_app].free_istance[0]);
-                    application_sum_up[best_match.id_app].count--;
-                    application_sum_up[best_match.id_app]
-                        .free_istance
-                        .splice(0, 1);
-                    update_server(single_server_status_sum_up[server_el], application_sum_up[best_match.id_app], 1);
-                    istanze_rimaste--;
-                    console.log(`${new Date().toLocaleString().replace(/-/g, '/')} --- Riempio il server : ${server_el} --- Istanze aggiunte finora ${added} --- Istanze rimaste ${istanze_rimaste}`);
+                do
+                {
+                    total_added_for_now = 0;
+                    const best_match = the_best_solution(single_server_status_sum_up[server_el], application_sum_up, precisione_dinamico_iniettamento);
+                    if (best_match.id_app != -1) {
+                        added++;
+                        total_add++;
+                        changed++;
+                        total_added_for_now++;
+                        istanze_rimaste--;
+                        console.log(`${new Date().toLocaleString().replace(/-/g, '/')} --- Riempio il server : ${server_el} con l'istanza ${application_sum_up[best_match.id_app].free_istance[0]} --- Istanze aggiunte finora ${added} --- Istanze rimaste ${istanze_rimaste}`);
+                        //devo togliere da app count
+                        logger.write(`inst_${application_sum_up[best_match.id_app].free_istance[0] + 1},machine_${server_el + 1}\n`);
+                        application_sum_up[best_match.id_app]
+                            .on_server_istance
+                            .push({
+                                id_istance: application_sum_up[best_match.id_app].free_istance[0],
+                                id_server: server_el,
+                                index_server_type: single_server_status_sum_up[server_el].type_index
+                            })
+                        single_server_status_sum_up[server_el]
+                            .list_id_app
+                            .push(best_match.id_app);
+                        single_server_status_sum_up[server_el]
+                            .list_id_istance
+                            .push(application_sum_up[best_match.id_app].free_istance[0]);
+                        application_sum_up[best_match.id_app].count--;
+                        application_sum_up[best_match.id_app]
+                            .free_istance
+                            .splice(0, 1);
+                        update_server(single_server_status_sum_up[server_el], application_sum_up[best_match.id_app], 1);
+                    }
                 }
-            })
+                while (total_added_for_now > 0) ;
+                }
+            )
             precisione_dinamico_iniettamento = precisione_dinamico_iniettamento * 0.9;
             console.log(new Date().toLocaleString().replace(/-/g, '/') + " --- Istanze aggiunte: " + added);
         }
@@ -378,6 +385,7 @@ inputFiles.forEach(files => {
             ;
             for (let i = 0; i < v_pendence_cpu.length - 1; i++) {
                 const server_id = v_pendence_cpu[i];
+                console.log(new Date().toLocaleString().replace(/-/g, '/') + ` --- Scannerizzo il server ${server_id}`);
                 const solution_in = the_best_solution_without_count_condition(single_server_status_sum_up[server_id], application_sum_up, precisione_dinamico_shuffle, v_pendence_cpu.slice(i + 1, v_pendence_cpu.length));
                 const solution_out = the_best_solution_inverse(single_server_status_sum_up[server_id], application_sum_up);
                 if (solution_in.id_app != -1) {
@@ -439,7 +447,6 @@ inputFiles.forEach(files => {
                     while (app_whish[i].id_server_out.length > 0 && app_whish[i].id_server_in.length > 0) ;
                     }
                 }
-            console.log(new Date().toLocaleString().replace(/-/g, '/') + " --- App scambiate: " + swiched);
             precisione_dinamico_shuffle = precisione_dinamico_shuffle * 0.9;
         }
         while (times < 8 && swiched > 0) 
@@ -625,8 +632,9 @@ function the_best_solution(server_resource, app_status_all, precision) {
         cpu: server_resource.cpu_status,
         ram: server_resource.ram_status
     }
-    for (let j = 0; j < app_status_all.length; j++) {
-        const app = app_status_all[j];
+    const vector_app = app_rompiscatole(app_status_all);
+    for (let j = 0; j < vector_app.length; j++) {
+        const app = app_status_all[vector_app[j]];
         if (app.count > 0 && compatible_list_id(server_resource.list_id_app, app.id_app, app_status_all) == 0) {
             const res = compatible_resource_server(server_resource, app.id_app, app_status_all);
             if (res.is_possible == 0) {
@@ -652,7 +660,7 @@ function the_best_solution(server_resource, app_status_all, precision) {
                     status_convergenza.cpu = res.new_server_resource.cpu_status;
                     status_convergenza.cpu = res.new_server_resource.ram_status;
                     if (status_convergenza.convergenza_cpu < precision) {
-                        j = app_status_all.length;
+                        j = vector_app.length;
                     }
                 }
             }
@@ -747,6 +755,7 @@ function update_server(server, application, add_or_delete) {
 
 function the_best_solution_without_count_condition(server_resource, app_status_all, precisone, in_id_server_list) {
     //quello che meglio aprossima
+    const vector_app = app_rompiscatole(app_status_all);
     let status_convergenza = {
         id_app: -1,
         convergenza_ram: 0,
@@ -754,8 +763,8 @@ function the_best_solution_without_count_condition(server_resource, app_status_a
         cpu: server_resource.cpu_status,
         ram: server_resource.ram_status
     }
-    for (let j = 0; j < app_status_all.length; j++) {
-        const app = app_status_all[j];
+    for (let j = 0; j < vector_app.length; j++) {
+        const app = app_status_all[vector_app[j]];
         let k;
         for (k = 0; k < app.on_server_istance.length; k++) {
             if (in_id_server_list.includes(app.on_server_istance[k].id_server)) {
@@ -788,7 +797,7 @@ function the_best_solution_without_count_condition(server_resource, app_status_a
                         status_convergenza.cpu = res.new_server_resource.cpu_status;
                         status_convergenza.cpu = res.new_server_resource.ram_status;
                         if (status_convergenza.convergenza_cpu < precisone) {
-                            j = app_status_all.length;
+                            j = vector_app.length;
                         }
                     }
                 }
